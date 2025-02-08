@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeController;
+use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
 use App\Models\User;
@@ -81,7 +82,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // route hanya untuk admin
-Route::middleware('auth', 'role:1')->group(function () {
+Route::middleware('auth', 'role:1', 'check.access')->group(function () {
    Route::get('/users', [UserController::class, 'index'])
       ->name('users');
 
@@ -177,6 +178,9 @@ Route::middleware('auth', 'role:1')->group(function () {
 
    Route::put('/profile/update/{id}', [ProfileController::class, 'update'])
       ->name('profile.update');
+
+   Route::get('/incomes', [IncomeController::class, 'index'])
+      ->name('incomes');
 });
 
 // Route hanya untuk karyawan kasir
