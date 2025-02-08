@@ -26,7 +26,7 @@
                                             <img class="w-100 img-fluid" src="{{ asset('img/products/default.png') }}"
                                                 alt="{{ $data->name }}">
                                         @endif
-                                        <h4 class="mt-4">Stok Tersedia: {{ $data->stock }}</h4>
+                                        <h4 class="mt-4 text-center">Stok Tersedia: {{ $data->stock }}</h4>
 
                                         <div id="barcode-container" hidden>
                                             <svg id="barcode" class="w-100"></svg>
@@ -66,9 +66,9 @@
                                                 @if ($errors->has('code'))
                                                     <small class="text-danger">{{ $errors->first('code') }}</small>
                                                 @endif
-                                                <button type="button" class="btn btn-primary w-25">
+                                                {{-- <button type="button" class="btn btn-primary w-25">
                                                     <i class="bi bi-upc-scan"> </i>Scan
-                                                </button>
+                                                </button> --}}
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -209,6 +209,183 @@
                                                 <td>{{ \Carbon\Carbon::parse($stock->created_at)->format('d F Y') }}
                                                 </td>
                                                 <td>{{ $stock->stock }}</td>
+                                                <td class="d-flex gap-2">
+                                                    @php
+                                                        // Hitung selisih hari antara tanggal stok dibuat dengan sekarang
+                                                        $isDisabled =
+                                                            Carbon\Carbon::parse($stock->created_at)->diffInDays(
+                                                                Carbon\Carbon::now(),
+                                                            ) > 7;
+                                                    @endphp
+                                                    <button class="btn btn-warning"
+                                                        onclick="openEditStockModal({{ $stock->id }}, {{ $stock->stock }})"
+                                                        {{ $isDisabled ? 'disabled' : '' }}>
+                                                        <i class="bi bi-pencil"></i></button>
+                                                    <button type="button" class="btn btn-danger btn-icon-text btn-md"
+                                                        onclick="openDeleteStockModal({{ $stock->id }})">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center">Belum ada riwayat stok.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- Modal Tambah Stok --}}
+                        <div class="modal fade" id="stock-modal" tabindex="-1" style="display: none;"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Tambah Stok</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <form action="{{ route('products.add-stock') }}" method="POST">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="stock-input" class="form-label">Jumlah Stok</label>
+                                                <input type="number" min="1" class="form-control"
+                                                    id="stock-input" name="stock">
+                                                @if ($errors->has('stock'))
+                                                    <small class="text-danger">{{ $errors->first('stock') }}</small>
+                                                @endif
+                                                <input type="hidden" name="product_id" value="{{ $data->id }}">
+                                            </div>
+
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Tambah</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Edit Stok -->
+                        <div class="modal fade" id="edit-stock-modal" tabindex="-1" style="display: none;"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Riwayat Stok</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <form id="edit-stock-form" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" id="edit-stock-id" name="stock_id_update">
+
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit-stock-input" class="form-label">Jumlah Stok</label>
+                                                <input type="number" min="1" class="form-control"
+                                                    id="edit-stock-input" name="stock_update">
+                                                <small class="text-danger d-none" id="edit-stock-error"></small>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Delete Stock -->
+                        <div class="modal fade" id="delete-stock-modal" tabindex="-1" style="display: none;"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Hapus Tambahan Stok</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Apakah anda yakin ingin menghapus data ini?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <form id="delete-stock-form" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-icon-text btn-md">Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Delete Produk -->
+                        <div class="modal fade" id="delete-product-modal" tabindex="-1" style="display: none;"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Hapus Produk</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Apakah anda yakin ingin menghapus Produk ini?
+                                        <p class="fw-bold mt-3">{{ $data->name }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <form action="{{ route('products.destroy', $data->id) }}" method="POST"
+                                            style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-icon-text btn-md">Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Riwayat Penjualan</h4>
+                            <div class="template-demo table-responsive">
+                                <table class="table table-striped datatable">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Jumlah terjual</th>
+                                            <th>Total Harga</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($transactions->sortByDesc('created_at') as $transaction)
+                                            <tr>
+                                                <td>{{ \Carbon\Carbon::parse($stock->created_at)->format('d F Y') }}
+                                                </td>
+                                                <td>{{ $transaction->total_quantity }}</td>
+                                                <td>Rp.{{ number_format($transaction->total_price, 0, ',', '.') }}</td>
                                                 <td class="d-flex gap-2">
                                                     @php
                                                         // Hitung selisih hari antara tanggal stok dibuat dengan sekarang

@@ -79,9 +79,9 @@
                                         @if ($errors->has('code'))
                                             <small class="text-danger">{{ $errors->first('code') }}</small>
                                         @endif
-                                        <button class="btn btn-primary w-25" id="scan-button">
+                                        {{-- <button class="btn btn-primary w-25" id="scan-button">
                                             <i class="bi bi-upc-scan"> </i> Scan
-                                        </button>
+                                        </button> --}}
                                         {{-- <button type="button" class="btn btn-secondary w-25" id="generateBarcode">
                                             <i class="bi bi-upc-scan"> </i> Generate
                                         </button> --}}

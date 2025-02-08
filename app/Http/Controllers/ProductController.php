@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Stock;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\TransactionDetail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -132,6 +133,10 @@ class ProductController extends Controller
       $title = 'Detail Produk';
       $data = Product::with('categories', 'stocks')->find($id);
       $category = Category::all();
+      $transactions = TransactionDetail::selectRaw('DATE(created_at) as date, SUM(qty) as total_quantity, SUM(total_product_price) as total_price')
+         ->where('product_id', $id)
+         ->groupBy('date')
+         ->get();
 
       if (!$data) {
          return redirect()->route('products')->with('error', 'Produk tidak ditemukan');
@@ -139,7 +144,8 @@ class ProductController extends Controller
          return view('pages.product.edit-product')->with([
             'title' => $title,
             'data' => $data,
-            'category' => $category
+            'category' => $category,
+            'transactions' => $transactions
          ]);
       }
    }
