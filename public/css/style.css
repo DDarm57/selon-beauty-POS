@@ -1,0 +1,76 @@
+.product-image {
+   object-fit: cover;
+   /* Memastikan gambar terpotong sesuai proporsi */
+   width: 100%;
+   /* Gambar memenuhi lebar elemen */
+   height: 200px;
+   /* Tetapkan tinggi konsisten */
+   display: block;
+   /* Hindari celah akibat gambar inline */
+}
+
+.card-product {
+   /* Atur tinggi minimum card */
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+   box-sizing: content-box;
+   /* Pastikan elemen dalam card tersusun secara vertikal */
+}
+
+.card-body-product {
+   flex-grow: 1;
+   display: flex;
+   flex-direction: column;
+   flex-basis: 30%;
+}
+
+.product-title {
+   font-weight: bold;
+   font-size: 24px;
+   flex-grow: 1;
+   flex-basis: 30%;
+}
+
+.card-text-product {
+   font-weight: bolder;
+   font-size: 20px;
+   height: fit-content;
+}
+
+.card-footer-product {
+   flex-grow: 1;
+   height: fit-content;
+   display: flex;
+   flex-basis: 15%;
+   flex-direction: column;
+}
+
+@media (max-width: 576px) {
+   .card-product {
+      height: auto;
+   }
+
+   .product-image {
+      height: 150px;
+   }
+
+   .product-title {
+      font-size: 18px;
+   }
+
+   .card-body-product {
+      flex-grow: 1;
+      flex-basis: 30%;
+   }
+
+   .card-text-product {
+      font-size: 16px;
+   }
+
+   .card-footer-product {
+      flex-grow: 1;
+      flex-basis: 10%;
+      font-size: 14px;
+   }
+}
