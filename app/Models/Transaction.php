@@ -15,7 +15,10 @@ class Transaction extends Model
         'customer_name',
         'total_qty',
         'total_price',
+        'total_price_after_discount',
         'pay',
         'change',
+        'payments',
+        'transaction_type',
     ];
 }

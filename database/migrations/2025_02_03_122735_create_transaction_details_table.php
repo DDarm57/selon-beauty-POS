@@ -16,8 +16,10 @@ return new class extends Migration
             $table->integer('transaction_id');
             $table->integer('product_id');
             $table->bigInteger('price_product');
+            $table->double('discount');
             $table->integer('qty');
             $table->bigInteger('total_product_price');
+            $table->bigInteger('total_product_price_after_discount');
             $table->timestamps();
         });
     }

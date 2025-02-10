@@ -8,6 +8,7 @@ use App\Models\Stock;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
@@ -38,8 +39,10 @@ class TransactionController extends Controller
          $transaction_detail[] = [
             'product_id' => $request->product_id[$i],
             'price_product' => $request->price_product[$i],
+            'discount' => $request->discount[$i],
             'qty' => $request->qty[$i],
             'total_product_price' => $request->total_product_price[$i],
+            'total_product_price_after_discount' => $request->total_product_price_after_discount[$i],
          ];
 
          $total_qty += $request->qty[$i];
@@ -52,8 +55,11 @@ class TransactionController extends Controller
          'total_qty' => $total_qty,
          'transaction_detail' => $transaction_detail,
          'total_price' => $request->total_price,
+         'total_price_after_discount' => $request->total_price_after_discount,
          'pay' => str_replace('.', '', $request->pay),
          'change' => $request->change,
+         'payments' => $request->payments,
+         'transaction_tipe' => $request->transaction_tipe
       ];
 
       // dd($transaction_data);
@@ -65,8 +71,10 @@ class TransactionController extends Controller
             'transaction_id' => $transaction->id,
             'product_id' => $td['product_id'],
             'price_product' => $td['price_product'],
+            'discount' => $td['discount'],
             'qty' => $td['qty'],
             'total_product_price' => $td['total_product_price'],
+            'total_product_price_after_discount' => $td['total_product_price_after_discount'],
          ]);
 
          $getProduct = Product::findOrfail($td['product_id']);
@@ -88,7 +96,7 @@ class TransactionController extends Controller
          ->first();
 
       $getTransactionDetails = TransactionDetail::join('products', 'transaction_details.product_id', '=', 'products.id')
-         ->select('transaction_details.*', 'products.*')
+         ->select('transaction_details.*', 'transaction_details.discount as product_discount', 'products.*')
          ->where('transaction_id', $id)
          ->get();
 
@@ -106,17 +114,28 @@ class TransactionController extends Controller
 
    public function transaction_history()
    {
+      $start_date = Carbon::today()->subWeek()->toDateString(); // Mundur 1 minggu
+      $end_date = Carbon::today()->toDateString();
+
+      if (isset($_GET['start_date']) || isset($_GET['end_date'])) {
+         $start_date = $_GET['start_date'];
+         $end_date = $_GET['end_date'];
+      }
+
       $getTransaction = Transaction::join('users', 'transactions.user_id', '=', 'users.id')
-         ->select('transactions.*',  'transactions.id as id_transaction', 'users.name')
+         ->select('transactions.*', 'transactions.id as id_transaction', 'users.name')
+         ->whereBetween('transactions.created_at', [
+            Carbon::parse($start_date)->startOfDay(),
+            Carbon::parse($end_date)->endOfDay()
+         ])
          ->get();
-
-
-
+      // dd($start_date, $end_date);
       // dd($getTransaction);
 
       $data = [
          'title' => 'Riwayat Transaksi',
-         'transactions' => $getTransaction
+         'transactions' => $getTransaction,
+         'search_form' => ['start_date' => $start_date, 'end_date' => $end_date]
       ];
 
       return view('pages.transaction.transaction_history', $data);
@@ -132,9 +151,11 @@ class TransactionController extends Controller
 
 
       $getTransactionDetails = TransactionDetail::join('products', 'transaction_details.product_id', '=', 'products.id')
-         ->select('transaction_details.*', 'products.*')
+         ->select('transaction_details.*', 'transaction_details.discount as product_discount', 'products.*')
          ->where('transaction_id', $id)
          ->get();
+
+      // dd($getTransactionDetails);
 
       $data = [
          'title' => 'Detail Transaksi',
